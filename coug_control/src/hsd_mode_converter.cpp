@@ -85,7 +85,7 @@ void HsdModeConverterNode::beamsCallback(const DvlBeamList::ConstSharedPtr& msg)
     return;
   }
 
-  // Transform the seafloor point (along the DVL z-axis) into the map frame
+  // Transform the seafloor point into the map frame
   geometry_msgs::msg::Pose dvl_T_seafloor;
   dvl_T_seafloor.position.z = -msg->altitude;
 
