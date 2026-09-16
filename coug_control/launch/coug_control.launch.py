@@ -18,6 +18,7 @@ from launch.substitutions import (
     EnvironmentVariable,
     LaunchConfiguration,
     PathJoinSubstitution,
+    PythonExpression,
 )
 from launch_ros.actions import Node
 
@@ -39,7 +40,9 @@ def generate_launch_description() -> LaunchDescription:
             [agent_ns, "_params.yaml"],
         ]
     )
-    scenario_param_file = LaunchConfiguration("scenario_param_file")
+    scenario_param_file = PythonExpression(
+        ["'", LaunchConfiguration("scenario_param_file"), "' or '", agent_param_file, "'"]
+    )
 
     return LaunchDescription(
         [
@@ -53,7 +56,7 @@ def generate_launch_description() -> LaunchDescription:
             ),
             DeclareLaunchArgument(
                 "scenario_param_file",
-                default_value=agent_param_file,
+                default_value="",
             ),
             Node(
                 package="coug_control",
