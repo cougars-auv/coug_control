@@ -24,7 +24,7 @@
 #include <tf2/convert.hpp>
 #include <tf2/exceptions.hpp>
 #include <tf2/time.hpp>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>  // NOLINT(misc-include-cleaner)
 #include <tf2_ros/buffer.hpp>
 #include <tf2_ros/transform_listener.hpp>
 
