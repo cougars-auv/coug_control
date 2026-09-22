@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from typing import Any
+
+from launch import LaunchContext, LaunchDescription
+from launch.action import Action
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import (
     EnvironmentVariable,
     LaunchConfiguration,
     PathJoinSubstitution,
-    PythonExpression,
 )
 from launch_ros.actions import Node
 
 
-def generate_launch_description() -> LaunchDescription:
+def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Action]:
     use_sim_time = LaunchConfiguration("use_sim_time")
     agent_ns = LaunchConfiguration("agent_ns")
 
@@ -33,10 +35,29 @@ def generate_launch_description() -> LaunchDescription:
     agent_param_file = PathJoinSubstitution(
         [EnvironmentVariable("CONFIG_DIR"), [agent_ns, "_params.yaml"]]
     )
-    scenario_param_file = PythonExpression(
-        ["'", LaunchConfiguration("scenario_param_file"), "' or '", agent_param_file, "'"]
+    scenario_param_file = (
+        LaunchConfiguration("scenario_param_file").perform(context) or agent_param_file
     )
 
+    return [
+        Node(
+            package="coug_control",
+            executable="hsd_mode_converter",
+            name="hsd_mode_converter_node",
+            parameters=[
+                fleet_param_file,
+                agent_param_file,
+                scenario_param_file,
+                {
+                    "use_sim_time": use_sim_time,
+                    "map_frame": "map",
+                },
+            ],
+        ),
+    ]
+
+
+def generate_launch_description() -> LaunchDescription:
     return LaunchDescription(
         [
             DeclareLaunchArgument(
@@ -51,19 +72,6 @@ def generate_launch_description() -> LaunchDescription:
                 "scenario_param_file",
                 default_value="",
             ),
-            Node(
-                package="coug_control",
-                executable="hsd_mode_converter",
-                name="hsd_mode_converter_node",
-                parameters=[
-                    fleet_param_file,
-                    agent_param_file,
-                    scenario_param_file,
-                    {
-                        "use_sim_time": use_sim_time,
-                        "map_frame": "map",
-                    },
-                ],
-            ),
+            OpaqueFunction(function=launch_setup),
         ]
     )
