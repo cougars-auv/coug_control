@@ -81,8 +81,9 @@ void HsdModeConverterNode::beamsCallback(const DvlBeamList::ConstSharedPtr& msg)
   try {
     map_T_dvl_tf = tf_buffer_->lookupTransform(params_.map_frame, dvl_frame, tf2::TimePointZero);
   } catch (const tf2::TransformException& ex) {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000, "Could not transform %s to %s: %s",
-                         dvl_frame.c_str(), params_.map_frame.c_str(), ex.what());
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
+                         "Failed to look up transform from '%s' to '%s': %s", dvl_frame.c_str(),
+                         params_.map_frame.c_str(), ex.what());
     return;
   }
 
@@ -101,8 +102,8 @@ auto HsdModeConverterNode::convertToDepth(const ControlSetpoint::ConstSharedPtr&
     -> ControlSetpoint {
   if (!has_seafloor_) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
-                         "Received altitude setpoint with no seafloor estimate. "
-                         "Holding at the surface.");
+                         "Received altitude setpoint with no seafloor estimate; holding at "
+                         "the surface.");
   }
 
   ControlSetpoint hsd_msg = *msg;
