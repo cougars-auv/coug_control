@@ -31,7 +31,7 @@
 #include "coug_control/hsd_mode_converter_parameters.hpp"
 #include "coug_interfaces/msg/control_setpoint.hpp"
 #include "coug_interfaces/msg/dvl_beam_list.hpp"
-#include "geometry_msgs/msg/pose.hpp"
+#include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 
 namespace coug_control {
@@ -87,13 +87,13 @@ void HsdModeConverterNode::beamsCallback(const DvlBeamList::ConstSharedPtr& msg)
   }
 
   // Transform the seafloor point into the map frame
-  geometry_msgs::msg::Pose dvl_T_seafloor;
-  dvl_T_seafloor.position.z = -msg->altitude;
+  geometry_msgs::msg::Point dvl_p_seafloor;
+  dvl_p_seafloor.z = -msg->altitude;
 
-  geometry_msgs::msg::Pose map_T_seafloor;
-  tf2::doTransform(dvl_T_seafloor, map_T_seafloor, map_T_dvl_tf);
+  geometry_msgs::msg::Point map_p_seafloor;
+  tf2::doTransform(dvl_p_seafloor, map_p_seafloor, map_T_dvl_tf);
 
-  seafloor_z_ = map_T_seafloor.position.z;
+  seafloor_z_ = map_p_seafloor.z;
   has_seafloor_ = true;
 }
 
