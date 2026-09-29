@@ -1,10 +1,10 @@
 hsd_mode_converter_node:
-  hsd_topic:
+  input_topic:
     type: string
     default_value: "cmd_hsd_helm"
     validation:
       not_empty<>: []
-  output_hsd_topic:
+  output_topic:
     type: string
     default_value: "cmd_hsd"
     validation:

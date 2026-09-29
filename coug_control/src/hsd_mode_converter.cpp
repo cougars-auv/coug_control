@@ -49,15 +49,14 @@ HsdModeConverterNode::HsdModeConverterNode(const rclcpp::NodeOptions& options)
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
   hsd_sub_ = create_subscription<ControlSetpoint>(
-      params_.hsd_topic, rclcpp::SystemDefaultsQoS(),
+      params_.input_topic, rclcpp::SystemDefaultsQoS(),
       [this](const ControlSetpoint::ConstSharedPtr& msg) { hsdCallback(msg); });
 
   beams_sub_ = create_subscription<DvlBeamList>(
       params_.beams_topic, rclcpp::SystemDefaultsQoS(),
       [this](const DvlBeamList::ConstSharedPtr& msg) { beamsCallback(msg); });
 
-  hsd_pub_ =
-      create_publisher<ControlSetpoint>(params_.output_hsd_topic, rclcpp::SystemDefaultsQoS());
+  hsd_pub_ = create_publisher<ControlSetpoint>(params_.output_topic, rclcpp::SystemDefaultsQoS());
 
   RCLCPP_INFO(get_logger(), "Initialization complete.");
 }
