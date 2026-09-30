@@ -19,13 +19,15 @@
 #include <rclcpp/logging.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/node_options.hpp>
+#include <rclcpp/time.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 #include <string>
 #include <tf2/convert.hpp>
 #include <tf2/exceptions.hpp>
-#include <tf2/time.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>  // NOLINT(misc-include-cleaner)
 #include <tf2_ros/buffer.hpp>
+#include <tf2_ros/create_timer_ros.hpp>
+#include <tf2_ros/message_filter.hpp>
 #include <tf2_ros/transform_listener.hpp>
 
 #include "coug_control/hsd_mode_converter_parameters.hpp"
@@ -46,15 +48,20 @@ HsdModeConverterNode::HsdModeConverterNode(const rclcpp::NodeOptions& options)
   params_ = param_listener_->get_params();
 
   tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+  tf_buffer_->setCreateTimerInterface(std::make_shared<tf2_ros::CreateTimerROS>(
+      get_node_base_interface(), get_node_timers_interface()));
   tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
   hsd_sub_ = create_subscription<ControlSetpoint>(
       params_.input_topic, rclcpp::SystemDefaultsQoS(),
       [this](const ControlSetpoint::ConstSharedPtr& msg) { hsdCallback(msg); });
 
-  beams_sub_ = create_subscription<DvlBeamList>(
-      params_.beams_topic, rclcpp::SystemDefaultsQoS(),
-      [this](const DvlBeamList::ConstSharedPtr& msg) { beamsCallback(msg); });
+  beams_sub_.subscribe(this, params_.beams_topic,
+                       rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
+  beams_filter_ = std::make_shared<tf2_ros::MessageFilter<DvlBeamList>>(
+      beams_sub_, *tf_buffer_, params_.map_frame, 10, get_node_logging_interface(),
+      get_node_clock_interface());
+  beams_filter_->registerCallback(&HsdModeConverterNode::beamsCallback, this);
 
   hsd_pub_ = create_publisher<ControlSetpoint>(params_.output_topic, rclcpp::SystemDefaultsQoS());
 
@@ -78,7 +85,8 @@ void HsdModeConverterNode::beamsCallback(const DvlBeamList::ConstSharedPtr& msg)
 
   geometry_msgs::msg::TransformStamped map_T_dvl_tf;
   try {
-    map_T_dvl_tf = tf_buffer_->lookupTransform(params_.map_frame, dvl_frame, tf2::TimePointZero);
+    map_T_dvl_tf =
+        tf_buffer_->lookupTransform(params_.map_frame, dvl_frame, rclcpp::Time(msg->header.stamp));
   } catch (const tf2::TransformException& ex) {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 1000,
                          "Failed to look up transform from '%s' to '%s': %s", dvl_frame.c_str(),

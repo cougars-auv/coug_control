@@ -15,8 +15,10 @@
 #pragma once
 
 #include <memory>
+#include <message_filters/subscriber.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <tf2_ros/buffer.hpp>
+#include <tf2_ros/message_filter.hpp>
 #include <tf2_ros/transform_listener.hpp>
 
 #include "coug_control/hsd_mode_converter_parameters.hpp"
@@ -41,11 +43,12 @@ class HsdModeConverterNode : public rclcpp::Node {
 
   // --- ROS Interfaces ---
   rclcpp::Subscription<coug_interfaces::msg::ControlSetpoint>::SharedPtr hsd_sub_;
-  rclcpp::Subscription<coug_interfaces::msg::DvlBeamList>::SharedPtr beams_sub_;
+  message_filters::Subscriber<coug_interfaces::msg::DvlBeamList> beams_sub_;
   rclcpp::Publisher<coug_interfaces::msg::ControlSetpoint>::SharedPtr hsd_pub_;
 
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+  std::shared_ptr<tf2_ros::MessageFilter<coug_interfaces::msg::DvlBeamList>> beams_filter_;
 
   // --- Parameters ---
   std::shared_ptr<hsd_mode_converter_node::ParamListener> param_listener_;
