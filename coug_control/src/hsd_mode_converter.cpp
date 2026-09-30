@@ -58,6 +58,7 @@ HsdModeConverterNode::HsdModeConverterNode(const rclcpp::NodeOptions& options)
 
   beams_sub_.subscribe(this, params_.beams_topic,
                        rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
+  // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.VirtualCall)
   beams_filter_ = std::make_shared<tf2_ros::MessageFilter<DvlBeamList>>(
       beams_sub_, *tf_buffer_, params_.map_frame, 10, get_node_logging_interface(),
       get_node_clock_interface());
