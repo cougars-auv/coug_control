@@ -77,7 +77,7 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
         Node(
             package="mavros",
             executable="mavros_node",
-            condition=IfCondition(is_agent(agent_ns, "blueboat1gz")),
+            condition=IfCondition(is_agent(agent_ns, "yboat1gz")),
             parameters=[
                 apm_config_file,
                 fleet_param_file,
@@ -95,7 +95,7 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
             package="topic_tools",
             executable="relay_field",
             name="cmd_vel_relay_node",
-            condition=IfCondition(is_agent(agent_ns, "blueboat1gz")),
+            condition=IfCondition(is_agent(agent_ns, "yboat1gz")),
             arguments=[
                 "cmd_vel_out",
                 "mavros/setpoint_raw/local",
