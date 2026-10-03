@@ -12,17 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from typing import Any
 
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchContext, LaunchDescription
 from launch.action import Action
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.conditions import IfCondition
+from launch.substitution import Substitution
 from launch.substitutions import (
     EnvironmentVariable,
     LaunchConfiguration,
     PathJoinSubstitution,
+    PythonExpression,
 )
 from launch_ros.actions import Node
+
+
+def agent_frame(agent_ns: str | Substitution, frame: str) -> PythonExpression:
+    return PythonExpression(["'", agent_ns, f"/{frame}' if '", agent_ns, f"' != '' else '{frame}'"])
+
+
+def is_agent(agent_ns: LaunchConfiguration, *names: str) -> PythonExpression:
+    return PythonExpression(["'", agent_ns, "' in ", str(names)])
 
 
 def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Action]:
@@ -31,6 +44,10 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
 
     scenario_param_path = LaunchConfiguration("scenario_param_file").perform(context)
 
+    mavros_dir = get_package_share_directory("mavros")
+
+    apm_config_file = os.path.join(mavros_dir, "launch", "apm_config.yaml")
+
     fleet_param_file = PathJoinSubstitution(
         [EnvironmentVariable("CONFIG_DIR"), "fleet", "coug_control_params.yaml"]
     )
@@ -38,6 +55,9 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
         [EnvironmentVariable("CONFIG_DIR"), [agent_ns, "_params.yaml"]]
     )
     scenario_param_file = scenario_param_path or agent_param_file
+
+    odom_frame = agent_frame(agent_ns, "odom")
+    base_link_frame = agent_frame(agent_ns, "base_link")
 
     return [
         Node(
@@ -53,6 +73,40 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
                     "map_frame": "map",
                 },
             ],
+        ),
+        Node(
+            package="mavros",
+            executable="mavros_node",
+            condition=IfCondition(is_agent(agent_ns, "blueboat1gz")),
+            parameters=[
+                apm_config_file,
+                fleet_param_file,
+                agent_param_file,
+                scenario_param_file,
+                {
+                    "use_sim_time": use_sim_time,
+                    "map_frame": "map",
+                    "odom_frame": odom_frame,
+                    "base_link_frame": base_link_frame,
+                },
+            ],
+        ),
+        Node(
+            package="topic_tools",
+            executable="relay_field",
+            name="cmd_vel_relay_node",
+            condition=IfCondition(is_agent(agent_ns, "blueboat1gz")),
+            arguments=[
+                "cmd_vel_out",
+                "mavros/setpoint_raw/local",
+                "mavros_msgs/msg/PositionTarget",
+                (
+                    "{coordinate_frame: 8, type_mask: 1479, "
+                    "velocity: {x: m.twist.linear.x}, yaw_rate: m.twist.angular.z}"
+                ),
+                "--wait-for-start",
+            ],
+            parameters=[{"use_sim_time": use_sim_time}],
         ),
     ]
 
