@@ -75,6 +75,37 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
             ],
         ),
         Node(
+            package="coug_control",
+            executable="mavros_plugin_config",
+            name="mavros_plugin_config_node",
+            condition=IfCondition(is_agent(agent_ns, "yboat1gz")),
+            parameters=[
+                fleet_param_file,
+                agent_param_file,
+                scenario_param_file,
+                {
+                    "use_sim_time": use_sim_time,
+                    "global_position.child_frame_id": base_link_frame,
+                    "imu.frame_id": base_link_frame,
+                    "local_position.frame_id": odom_frame,
+                    "local_position.tf.frame_id": odom_frame,
+                    "local_position.tf.child_frame_id": base_link_frame,
+                },
+            ],
+        ),
+        Node(
+            package="topic_tools",
+            executable="relay",
+            name="cmd_vel_relay_node",
+            condition=IfCondition(is_agent(agent_ns, "yboat1gz")),
+            parameters=[
+                fleet_param_file,
+                agent_param_file,
+                scenario_param_file,
+                {"use_sim_time": use_sim_time},
+            ],
+        ),
+        Node(
             package="mavros",
             executable="mavros_node",
             condition=IfCondition(is_agent(agent_ns, "yboat1gz")),
@@ -85,28 +116,11 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
                 scenario_param_file,
                 {
                     "use_sim_time": use_sim_time,
-                    "map_frame": "map",
-                    "odom_frame": odom_frame,
-                    "base_link_frame": base_link_frame,
+                    "map_frame_id": "map",
+                    "odom_frame_id": odom_frame,
+                    "base_link_frame_id": base_link_frame,
                 },
             ],
-        ),
-        Node(
-            package="topic_tools",
-            executable="relay_field",
-            name="cmd_vel_relay_node",
-            condition=IfCondition(is_agent(agent_ns, "yboat1gz")),
-            arguments=[
-                "cmd_vel_out",
-                "mavros/setpoint_raw/local",
-                "mavros_msgs/msg/PositionTarget",
-                (
-                    "{coordinate_frame: 8, type_mask: 1479, "
-                    "velocity: {x: m.twist.linear.x}, yaw_rate: m.twist.angular.z}"
-                ),
-                "--wait-for-start",
-            ],
-            parameters=[{"use_sim_time": use_sim_time}],
         ),
     ]
 

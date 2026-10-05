@@ -28,7 +28,7 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
-set(COUG_CONTROL_NODES hsd_mode_converter)
+set(COUG_CONTROL_NODES hsd_mode_converter mavros_plugin_config)
 
 set(COUG_CONTROL_NODE_SOURCES "")
 set(COUG_CONTROL_PARAM_LIBRARIES "")
@@ -51,6 +51,7 @@ target_link_libraries(coug_control_component ${COUG_CONTROL_PARAM_LIBRARIES})
 
 rclcpp_components_register_nodes(coug_control_component
   "coug_control::HsdModeConverterNode"
+  "coug_control::MavrosPluginConfigNode"
 )
 
 foreach(node IN LISTS COUG_CONTROL_NODES)
