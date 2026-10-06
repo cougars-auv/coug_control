@@ -57,7 +57,7 @@ HsdModeConverterNode::HsdModeConverterNode(const rclcpp::NodeOptions& options)
       [this](const ControlSetpoint::ConstSharedPtr& msg) { hsdCallback(msg); });
 
   beams_sub_.subscribe(this, params_.beams_topic,
-                       rclcpp::SystemDefaultsQoS().get_rmw_qos_profile());
+                       rclcpp::SystemDefaultsQoS().keep_last(10).get_rmw_qos_profile());
   // NOLINTNEXTLINE(clang-analyzer-optin.cplusplus.VirtualCall)
   beams_filter_ = std::make_shared<tf2_ros::MessageFilter<DvlBeamList>>(
       beams_sub_, *tf_buffer_, params_.map_frame, 10, get_node_logging_interface(),
