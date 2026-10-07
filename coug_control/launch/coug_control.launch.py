@@ -96,7 +96,7 @@ def launch_setup(context: LaunchContext, *args: Any, **kwargs: Any) -> list[Acti
         Node(
             package="topic_tools",
             executable="relay",
-            name="cmd_vel_relay_node",
+            name="cmd_vel_relay",
             condition=IfCondition(is_agent(agent_ns, "yboat1gz")),
             parameters=[
                 fleet_param_file,
