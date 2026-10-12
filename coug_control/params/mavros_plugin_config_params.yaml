@@ -1,0 +1,6 @@
+mavros_plugin_config_node:
+  tick_period_sec:
+    type: double
+    default_value: 1.0
+    validation:
+      gt<>: [0.0]
