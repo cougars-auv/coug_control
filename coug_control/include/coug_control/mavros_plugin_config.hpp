@@ -16,7 +16,11 @@
 
 #include <map>
 #include <memory>
-#include <rclcpp/rclcpp.hpp>
+#include <rclcpp/node.hpp>
+#include <rclcpp/node_options.hpp>
+#include <rclcpp/parameter.hpp>
+#include <rclcpp/parameter_client.hpp>
+#include <rclcpp/timer.hpp>
 #include <string>
 #include <vector>
 
